@@ -7,7 +7,7 @@ class VectorDBProvider(str, Enum):
 
 # 可以在这里添加其他配置相关的内容
 MILVUS_CONFIG = {
-    "uri": "03-vector-store/langchain_milvus.db",
+    "uri": "http://localhost:19530",
     "index_types": {
         "flat": "FLAT",
         "ivf_flat": "IVF_FLAT",

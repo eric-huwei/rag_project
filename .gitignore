@@ -175,3 +175,5 @@ cython_debug/
 
 # Mac 系统文件
 .DS_Store
+
+/rag_project/

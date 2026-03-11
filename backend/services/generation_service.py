@@ -38,12 +38,71 @@ class GenerationService:
             "deepseek": {
                 "deepseek-v3": "deepseek-chat",
                 "deepseek-r1": "deepseek-reasoner",
+            },
+            "qwen":{
+                "qwen3.5-plus":"qwen3.5-plus"
             }
         }
         
         # 确保输出目录存在
         os.makedirs("05-generation-results", exist_ok=True)
+    
+    def _generate_with_qwen(
+        self,
+        model_name: str,
+        query: str,
+        context: str,
+        api_key: Optional[str] = None
+    ) -> str:
+        """
+        使用千问3.5-plus API生成回答（通义千问开放平台）
         
+        参数:
+            model_name: 模型名称（固定为qwen3.5-plus）
+            query: 用户查询
+            context: 上下文信息
+            api_key: 千问API密钥，如不提供则从环境变量获取
+            
+        返回:
+            生成的回答文本
+        """
+        try:
+            # 获取千问API密钥
+            if not api_key:
+                api_key = os.getenv("ALIAI_API_KEY")
+                if not api_key:
+                    raise ValueError("Qwen API key not provided (需设置ALIAI_API_KEY环境变量)")
+            
+            # 初始化OpenAI兼容客户端（千问API兼容OpenAI格式）
+            client = OpenAI(
+                api_key=api_key,
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"  # 千问API兼容地址
+            )
+            
+            # 构建对话消息
+            messages = [
+                {"role": "system", "content": "你是一个专业的助手，仅基于提供的上下文回答问题。如果上下文无相关信息，请明确说明「无法从上下文获取相关信息」。"},
+                {"role": "user", "content": f"上下文：{context}\n\n问题：{query}"}
+            ]
+            
+            # 调用千问API
+            response = client.chat.completions.create(
+                model=self.models["qwen"][model_name],  # 使用qwen3.5-plus模型
+                messages=messages,
+                temperature=0.7,  # 随机性
+                max_tokens=1024,   # 最大生成长度
+                stream=False
+            )
+            
+            # 返回回答内容
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            logger.error(f"Error generating with Qwen: {str(e)}")
+            raise
+
+
+
     def _load_huggingface_model(self, model_name: str):
         """
         加载HuggingFace模型
@@ -237,7 +296,7 @@ class GenerationService:
         生成回答并保存结果
         
         参数:
-            provider: 模型提供商，可选值为"huggingface"、"openai"、"deepseek"
+            provider: 模型提供商，可选值为"huggingface"、"openai"、"deepseek"、"qwen"
             model_name: 模型名称
             query: 用户查询
             search_results: 搜索结果列表，用于构建上下文
@@ -261,6 +320,8 @@ class GenerationService:
                 response = self._generate_with_openai(model_name, query, context, api_key)
             elif provider == "deepseek":
                 response = self._generate_with_deepseek(model_name, query, context, api_key, show_reasoning)
+            elif provider == "qwen":  # 新增千问提供商分支
+                response = self._generate_with_qwen(model_name, query, context, api_key)
             else:
                 raise ValueError(f"Unsupported provider: {provider}")
                 

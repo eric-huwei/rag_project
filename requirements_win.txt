@@ -20,8 +20,8 @@ certifi==2024.7.4
 cffi==1.17.0
 chardet==5.2.0
 charset-normalizer==3.3.2
-chroma-hnswlib==0.7.3
-chromadb==0.5.3
+#chroma-hnswlib==0.7.3
+#chromadb==0.5.3
 click==8.1.7
 coloredlogs==15.0.1
 comm==0.2.2
@@ -79,7 +79,7 @@ jupyter_core==5.7.2
 kiwisolver==1.4.5
 kubernetes==30.1.0
 langchain==0.3.8
-langchain-chroma==0.1.4
+#langchain-chroma==0.1.4
 langchain-community==0.3.8
 langchain-core==0.3.21
 langchain-huggingface==0.1.2
